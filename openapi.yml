@@ -1,0 +1,526 @@
+openapi: 3.0.3
+info:
+  title: ByteCraft API Specification
+  version: 0.0.1
+  description: |
+    # API Specification for Byte Crafts Session 1 on OAS
+    **ByteCraft** is an specialed company provides online real time learning labs for programming course. 
+    
+    # Categories
+    - Cloud Course
+      - GCP
+      - Azure
+      - AWS
+    - Backend Dev
+      - Spring Boot
+      - Python 
+      - Node JS
+      
+    **Happy Visting our Site**     
+  termsOfService: https://CraftBytesAcademy.com/Termsandconditions/  
+  contact:
+    name: Craft Byte API Support
+    url: https:/craftBytesAcademy.com/APISupport
+    email: apiSupport@craftBytesAcademy.com
+externalDocs:
+  description: Refer to the Exernal Documentation
+  url: https://indian.gov.in  
+  x-custom-info:
+    commont: This custom tag written to show case the usage of these tags and how it is behaved 
+    developers:
+      - name: Venkata Subbiah
+        email: vs@craftsbytes.com
+      - nmae: Naveen
+        email: naveen@craftsbytes.com
+servers:
+  - url: https://www.dev.CraftBytesAcademy.com/v1
+    description: Dev API for Version 1
+  - url:  https://www.uat.CraftBytesAcademy.com/v1
+    description: Dev API for Version 1
+  - url:  https://www.{hostName}.CraftBytesAcademy.com:{port}/{version}
+    description: Production Server  
+    variables:
+      hostName:
+        default: demo
+        description: this value is assigned by the service provider
+      port:
+        enum:
+          - "9490"
+          - "443"
+        default: "9490"
+      version:
+        default: v1
+tags:
+  - name: Courses
+    description: Courses related operations
+  - name: Orders
+    description: Order related operations
+  - name: Categories
+    description: Category related operations
+security:
+  - BasicAuth: []
+  - BearerAuth: []
+  - ApiKeyAuth: []
+  - oAuth2AuthCode:
+    - read
+    - write
+    - admin
+    
+paths:
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: List all catgories of CraftBytes Academy 
+      description: retuns the list of categories suppored by CraftBytes Academy
+      operationId:  getCategories
+      security: []
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+            minimum: 11
+            maximum: 1001
+          examples:
+            cloud:
+              summary: use this example for Cloud category
+              value: 101
+            backendProgramming:
+              summary: use this example for Backend Programming category
+              value: 201
+            infra:
+              summary: use this example for infra related categories
+              value: 301
+      responses:
+        '200':
+          description: a list of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    categoryId:
+                      type: integer
+                    categoryName:
+                      type: string
+        '400':
+          description: Business error
+          content:
+            application/json:
+              schema:
+                type: string
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+          
+  /courses:
+    get:
+      tags:
+        - Courses
+      summary: List of Courses
+      description: |
+        Returns the list of Courses offered by Craft Bytes Academy
+      operationId: getCourses  
+      security:
+        - BasicAuth: []
+      parameters:
+        - name: catergoryId
+          in: query
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+      responses:
+        '200':
+          description: A list of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+              examples:
+                courses-data:
+                  summary: Course details example data 
+                  value:
+                    - courseId: 101
+                      name: GCP - Cloud Professional Arch
+                      price: 599.00
+                      categoryName: Cloud Course
+                    - courseId: 102
+                      name: GCP - Cloud Professional Dev Ops
+                      price: 799.99
+                      categoryName: Cloud Course   
+                    - courseId: 202
+                      name: Spring Boot Microservices
+                      price: 299.11
+                      categoryName: Backend Programming
+                    - courseId: 302
+                      name: Dev Ops
+                      price: 999.99
+                      categoryName: Infra  
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+  /courses/{courseId}:
+    get:
+      tags:
+        - Courses
+      summary: List of Courses
+      description: |
+        Returns the list of Courses offered by Craft Bytes Academy
+      parameters:
+        - name: courseId
+          in: path
+
+          required: true
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+          example: 101  
+      responses:
+
+        '200':
+          description: returns the course details
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/Course"  
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create an order
+      description: |
+        Post order details to Craft Bytes site for processing an order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courses:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      releaseDate:
+                        type: string
+                        format: boolean
+                      courseId:
+                        type: integer
+                        description: " Course Id value"
+                      name:
+                        type: string
+                      price:
+                        type: number
+                      categoryName:
+                        type: string
+                      quantity:
+                        type: integer
+                        description: |
+                          ***Quantity*** represent `position/seats` valus when this feild is being sent in while placing an order 
+                          ```
+                          int quantity
+                          ```
+                address:
+                  type: object
+                  properties:
+                    addlinessLine:
+                      type: string
+                    city:
+                      type: string
+                    state:
+                      type: string
+                    pincode:
+                      type: integer
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId:
+                    type: integer
+          links:
+            GetOrderByOrderId:
+              $ref: '#/components/links/GetOrderByOrderId'
+    put:
+      tags:
+          - Orders
+      summary: Update order
+      description: |
+        Update order details - Craft Bytes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                orderId:
+                  type: integer
+                courses:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Course"
+                address:
+                  $ref: "#/components/schemas/Address"
+      responses:
+        '200':
+          description: Order updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string    
+    delete:
+      tags:
+        - Orders
+      summary: Delete Order
+      description: Delete order details from Craft Bytes 
+      parameters:
+       - $ref: "#/components/parameters/orderidQueryParam"
+      responses:
+        '204':
+          description: Order details cancelled successfully
+    get:
+      tags: 
+        - Orders
+      summary: Get Order Details
+      description: Get order details from Craft Bytes
+      operationId: getOrderDetailsusingQueryParam
+      parameters:
+        - $ref: "#/components/parameters/orderidQueryParam"
+      responses:
+        '200':
+          description: Fetch Order details Successfully
+          
+  /orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get Order Details
+      description: Get order details from Craft Bytes
+      operationId: getOrderDetailsusingPathParam
+      deprecated: true
+      parameters:
+        - $ref: "#/components/parameters/orderidPathParam"
+      responses:
+        '200':
+          description: Fetch Order details Successfully
+  
+  /oneOfOrder:
+    post:
+      tags:
+      - Orders
+      summary: Insert Oneof the Order details
+      description: Insert oneof the order details 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courses:
+                  type: object
+                  oneOf:
+                    - $ref: "/#/components/schemas/BackendCourse"
+                    - $ref: "/#/components/schemas/CloudCourse"
+                address:
+                  $ref: "/#/components/schemas/Address"
+              required:
+                - courses
+                - address
+      responses:
+        '200':
+          description: Order placed successfully
+  /anyOfOrder:
+    get:
+      tags:
+      - Orders
+      summary: Get Order Dtails
+      description: get order details based on order Id and fetchtype
+      parameters:
+        - $ref: "#/components/parameters/orderidQueryParam"
+        - name: fetchType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - summary
+              - details
+          description: |
+            Fetch Type:
+            * `summary` - will provide Order Summary
+            * `details` - will provide Order summary and Order Address
+      responses: 
+        '200':
+          description: return Course Details
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: "#/components/schemas/OrderSummary"
+                  - $ref: "#/components/schemas/OrderAddress"
+components:
+  parameters:
+    orderidQueryParam:
+      name: orderId
+      in: query
+      required: true
+      schema:
+       type: integer
+    orderidPathParam:
+      name: orderId
+      in: path
+      required: true
+      schema:
+       type: integer
+       
+  
+  schemas:
+    Address:
+      type: object
+      properties:
+        addlinessLine:
+          type: string
+        city:
+          type: string
+          nullable: true
+        state:
+          type: string
+          enum:
+            - Andhra Pradesh
+            - Telegana
+            - Tamil Nadu
+            - Kerala
+            - Karnataka
+        pincode:
+          type: integer
+        isOfficeAddress:
+          type: boolean
+      required: [state, pincode,city,isOfficeAddress]
+        
+    Course:
+      type: object
+      properties:
+        courseId:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+          minimum: 100.01
+          maximum: 9999.99
+        releaseDate:
+          type: string
+          format: date-time
+          readOnly: true
+        categoryName:
+          type: string
+    CloudCourse:
+      allOf:
+        - $ref: "#/components/schemas/Course"
+        - type: object
+          properties:
+            subscription:
+              type: string
+              enum:
+                - GCP
+                - AWS
+                - AZURE
+    BackendCourse:
+      allOf:
+        - $ref: "#/components/schemas/Course"
+        - type: object
+          properties:
+            IDERequiredFlag:
+              type: boolean
+              
+    OrderSummary:
+      type: object
+      properties:
+        courses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Course"
+    OrderAddress:
+      type: object
+      properties:
+        courses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Address"        
+              
+  responses:
+    InternalServerError:
+      description: |
+        An error occured while processing the requestr. 
+        Please contact support@craftBytes.com
+        
+        
+  links:
+    GetOrderByOrderId:
+      description: |
+        The `orderId` value returned in the response can be used as input parameter in `GET /orders`.
+      operationId:  getOrderDetailsusingPathParam
+      parameters:
+        orderId: '$response.body#/orderId'
+  
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
+      
+    oAuth2AuthCode:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/authorize
+          scopes:
+            read: Read only access
+            write: Read write access
+            admain: Amdin access
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
